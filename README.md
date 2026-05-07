@@ -153,3 +153,9 @@ Use:
 ## License
 
 Proprietary (update as needed).
+
+## Deployment Helpers
+
+- Railway guide: [docs/RAILWAY.md](/Users/mlh/LetMeIn/docs/RAILWAY.md)
+- Env checklist: [docs/ENV-CHECKLIST.md](/Users/mlh/LetMeIn/docs/ENV-CHECKLIST.md)
+- Smoke test script: `scripts/smoke-test.sh`
