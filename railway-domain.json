@@ -1,0 +1,36 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "domainBinding": {
+    "primaryDomain": "https://letmein.cambodia.com",
+    "routes": [
+      {
+        "path": "/",
+        "service": "web"
+      },
+      {
+        "path": "/api/health",
+        "service": "web"
+      },
+      {
+        "path": "/webhook",
+        "service": "web",
+        "forwardedTo": "bot"
+      },
+      {
+        "path": "/bot/health",
+        "service": "web",
+        "forwardedTo": "bot"
+      },
+      {
+        "path": "/cron/ping",
+        "service": "web",
+        "forwardedTo": "cron"
+      }
+    ],
+    "tls": {
+      "provider": "lets-encrypt",
+      "autoRenew": true,
+      "httpsOnly": true
+    }
+  }
+}

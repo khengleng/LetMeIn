@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "NODE_ENV=development node index.js",
-    "start": "NODE_ENV=production node index.js",
+    "start": "NODE_ENV=production node health.js",
     "set:webhook": "node webhook.js set",
     "delete:webhook": "node webhook.js delete",
     "health": "node webhook.js health"
