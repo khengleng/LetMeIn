@@ -4,7 +4,7 @@ const { Telegraf } = require('telegraf');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const baseUrl = process.env.WEBHOOK_BASE_URL;
-const secretPath = process.env.WEBHOOK_SECRET_PATH || 'telegram-webhook';
+const secretPath = process.env.WEBHOOK_SECRET_PATH || 'webhook';
 const secretToken = process.env.WEBHOOK_SECRET_TOKEN || '';
 
 if (!token) {
@@ -21,7 +21,7 @@ async function setWebhook() {
     throw new Error('Missing WEBHOOK_SECRET_TOKEN');
   }
 
-  const url = `${baseUrl}/telegraf/${secretPath}`;
+  const url = `${baseUrl}/${secretPath}`;
   const result = await bot.telegram.setWebhook(url, {
     secret_token: secretToken,
     allowed_updates: ['message'],

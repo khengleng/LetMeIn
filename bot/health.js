@@ -7,6 +7,7 @@ const { createHandlers } = require('./handlers');
 const PORT = Number(process.env.PORT || 8080);
 const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
 const BOT_WEBHOOK_SECRET = process.env.BOT_WEBHOOK_SECRET || process.env.WEBHOOK_SECRET_TOKEN;
+const WEBHOOK_SECRET_PATH = process.env.WEBHOOK_SECRET_PATH || 'webhook';
 const WEBHOOK_QUERY_SECRET = process.env.BOT_WEBHOOK_QUERY_SECRET || BOT_WEBHOOK_SECRET;
 const MAX_WEBHOOK_REQ_PER_MIN = Number(process.env.MAX_WEBHOOK_REQ_PER_MIN || 90);
 
@@ -41,6 +42,15 @@ bot.start(handlers.onStart);
 bot.command('mylink', handlers.onMyLink);
 bot.command('status', handlers.onStatus);
 bot.command('help', handlers.onHelp);
+bot.command('earnings', handlers.onEarnings);
+bot.command('discount', handlers.onDiscount);
+bot.command('payout', handlers.onPayout);
+bot.command('pay', handlers.onPay);
+bot.command('staffauth', handlers.onStaffAuth);
+bot.command('stamps', handlers.onStamps);
+bot.command('issuestamp', handlers.onIssueStamp);
+bot.command('badge', handlers.onBadge);
+bot.command('verifydonate', handlers.onVerifyDonate);
 
 const startedAt = Date.now();
 const rateMap = new Map();
@@ -67,7 +77,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (req.method === 'POST' && url.pathname === '/webhook') {
+    if (req.method === 'POST' && url.pathname === `/${WEBHOOK_SECRET_PATH}`) {
       const ip = (req.headers['x-forwarded-for'] || '').toString().split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
       if (checkRateLimit(ip)) {
         res.writeHead(429, { 'Content-Type': 'application/json' });
@@ -76,16 +86,9 @@ const server = http.createServer(async (req, res) => {
       }
 
       const incomingHeaderSecret = req.headers['x-telegram-bot-api-secret-token'];
-      if (incomingHeaderSecret !== BOT_WEBHOOK_SECRET) {
+      if (BOT_WEBHOOK_SECRET && incomingHeaderSecret !== BOT_WEBHOOK_SECRET) {
         res.writeHead(401, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Invalid webhook header token' }));
-        return;
-      }
-
-      const querySecret = url.searchParams.get('secret');
-      if (querySecret !== WEBHOOK_QUERY_SECRET) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid webhook query secret' }));
         return;
       }
 

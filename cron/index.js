@@ -1,5 +1,6 @@
 const http = require('http');
 const cron = require('node-cron');
+const { runBatchAnchor } = require('./anchor');
 
 const PORT = Number(process.env.PORT || 8081);
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -16,24 +17,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !SUPABASE_ANON_KEY) {
 
 const startedAt = Date.now();
 
-async function callEdgeFunction(name, payload = {}) {
-  const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/${name}`;
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
 
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(`${name} failed (${res.status}): ${text}`);
-  }
-
-  console.log(`[cron] ${name} success: ${text}`);
-}
 
 async function callRpc(functionName, payload = {}) {
   const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/${functionName}`;
@@ -56,10 +40,12 @@ async function callRpc(functionName, payload = {}) {
 }
 
 async function runAnchorBatch() {
+  console.log('[cron] Starting scheduled anchor-batch...');
   try {
-    await callEdgeFunction('anchor-batch', { source: 'railway-cron' });
+    const result = await runBatchAnchor();
+    console.log('[cron] anchor-batch success:', JSON.stringify(result));
   } catch (error) {
-    console.error('[cron] anchor-batch error:', error);
+    console.error('[cron] anchor-batch error:', error.message);
   }
 }
 

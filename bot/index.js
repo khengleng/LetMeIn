@@ -3,28 +3,35 @@ require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const { createHandlers } = require('./handlers');
 
+const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+const BOT_WEBHOOK_SECRET = process.env.BOT_WEBHOOK_SECRET || process.env.WEBHOOK_SECRET_TOKEN;
+
 const required = [
-  'TELEGRAM_BOT_TOKEN',
   'TELEGRAM_BOT_USERNAME',
   'SUPABASE_URL',
   'SUPABASE_ANON_KEY',
   'SUPABASE_LOG_REFERRAL_URL',
 ];
 
+if (!BOT_TOKEN) throw new Error('Missing BOT_TOKEN or TELEGRAM_BOT_TOKEN');
+if (process.env.NODE_ENV === 'production' && !BOT_WEBHOOK_SECRET) {
+  throw new Error('Missing BOT_WEBHOOK_SECRET or WEBHOOK_SECRET_TOKEN');
+}
+
 for (const key of required) {
   if (!process.env[key]) throw new Error(`Missing required env var: ${key}`);
 }
 
 const config = {
-  botToken: process.env.TELEGRAM_BOT_TOKEN,
+  botToken: BOT_TOKEN,
   botUsername: process.env.TELEGRAM_BOT_USERNAME,
   supabaseUrl: process.env.SUPABASE_URL,
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
   logReferralUrl: process.env.SUPABASE_LOG_REFERRAL_URL,
   botSupabaseJwt: process.env.BOT_SUPABASE_JWT || '',
   webhookBaseUrl: process.env.WEBHOOK_BASE_URL || '',
-  webhookSecretPath: process.env.WEBHOOK_SECRET_PATH || 'telegram-webhook',
-  webhookSecretToken: process.env.WEBHOOK_SECRET_TOKEN || '',
+  webhookSecretPath: process.env.WEBHOOK_SECRET_PATH || 'webhook',
+  webhookSecretToken: BOT_WEBHOOK_SECRET || '',
   port: Number(process.env.PORT || 3001),
   requestTimeoutMs: Number(process.env.REQUEST_TIMEOUT_MS || 8000),
   defaultReferralStatus: process.env.DEFAULT_REFERRAL_STATUS || 'pending',
@@ -108,7 +115,7 @@ async function bootstrap() {
     if (!config.webhookSecretToken) throw new Error('WEBHOOK_SECRET_TOKEN is required in production mode');
 
     const domain = config.webhookBaseUrl;
-    const hookPath = `/telegraf/${config.webhookSecretPath}`;
+    const hookPath = `/${config.webhookSecretPath}`;
 
     await bot.telegram.setWebhook(`${domain}${hookPath}`, {
       secret_token: config.webhookSecretToken,

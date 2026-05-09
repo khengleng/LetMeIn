@@ -66,10 +66,11 @@ Create three services in the same Railway project.
    - `SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `POLYGON_RPC_URL`
-   - `CONTRACT_ADDRESS`
-   - `PRIVATE_KEY`
-   - `ANCHOR_CRON_SCHEDULE`
-   - `TENANT_CHECK_CRON_SCHEDULE`
+   - `ANCHOR_CONTRACT_ADDRESS`
+   - `PRIVATE_KEY` (anchoring wallet)
+   - `ANCHOR_CRON_SCHEDULE` (default: 0 18 * * 0)
+   - `TENANT_CHECK_CRON_SCHEDULE` (default: 0 1 * * *)
+   - `BADGE_TOKEN_CLEANUP_CRON` (default: */15 * * * *)
 4. Networking:
    - Public networking ON (for `/ping` uptime checks).
 

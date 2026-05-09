@@ -2,16 +2,16 @@ require('dotenv').config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
 const BOT_WEBHOOK_SECRET = process.env.BOT_WEBHOOK_SECRET || process.env.WEBHOOK_SECRET_TOKEN;
-const BOT_WEBHOOK_QUERY_SECRET = process.env.BOT_WEBHOOK_QUERY_SECRET || BOT_WEBHOOK_SECRET;
-const PRIMARY_DOMAIN = process.env.NEXT_PUBLIC_APP_URL || 'https://letmein.cambodia.com';
+const WEBHOOK_BASE_URL = process.env.WEBHOOK_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://letmein.cambodia.com';
+const WEBHOOK_SECRET_PATH = process.env.WEBHOOK_SECRET_PATH || 'webhook';
 const FALLBACK_WEBHOOK_BASE = process.env.BOT_FALLBACK_WEBHOOK_BASE || '';
 
-if (!BOT_TOKEN || !BOT_WEBHOOK_SECRET || !BOT_WEBHOOK_QUERY_SECRET) {
+if (!BOT_TOKEN || !BOT_WEBHOOK_SECRET) {
   throw new Error('Missing BOT token or webhook secrets');
 }
 
 function webhookUrl(base) {
-  return `${base.replace(/\/$/, '')}/webhook?secret=${encodeURIComponent(BOT_WEBHOOK_QUERY_SECRET)}`;
+  return `${base.replace(/\/$/, '')}/${WEBHOOK_SECRET_PATH}`;
 }
 
 async function setWebhook(url) {
@@ -50,7 +50,7 @@ async function getWebhookInfo() {
 }
 
 (async () => {
-  const primaryWebhook = webhookUrl(PRIMARY_DOMAIN);
+  const primaryWebhook = webhookUrl(WEBHOOK_BASE_URL);
 
   try {
     const setResult = await setWebhook(primaryWebhook);

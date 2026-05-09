@@ -29,8 +29,8 @@ Set these in Railway service variables:
 - `SUPABASE_ANON_KEY=<supabase_anon_key>`
 - `SUPABASE_LOG_REFERRAL_URL=https://<project-ref>.supabase.co/functions/v1/log-referral`
 - `BOT_SUPABASE_JWT=<tenant-aware-jwt-for-testing>`
-- `WEBHOOK_SECRET_PATH=<long-random-path>`
 - `WEBHOOK_SECRET_TOKEN=<long-random-secret>`
+- `WEBHOOK_SECRET_PATH=webhook`
 - `REQUEST_TIMEOUT_MS=8000`
 - `DEFAULT_REFERRAL_STATUS=pending`
 - `DEFAULT_TENANT_ID=00000000-0000-0000-0000-000000000000`
@@ -51,7 +51,7 @@ npm run health
 ```
 
 Expected: webhook URL points to
-`https://<your-bot-service>.up.railway.app/telegraf/<WEBHOOK_SECRET_PATH>`
+`https://<your-bot-service>.up.railway.app/<WEBHOOK_SECRET_PATH>`
 
 ## 2) Deploy `letmein-public-verify`
 
