@@ -11,9 +11,11 @@ const WEBHOOK_SECRET_PATH = process.env.WEBHOOK_SECRET_PATH || 'webhook';
 const WEBHOOK_QUERY_SECRET = process.env.BOT_WEBHOOK_QUERY_SECRET || BOT_WEBHOOK_SECRET;
 const MAX_WEBHOOK_REQ_PER_MIN = Number(process.env.MAX_WEBHOOK_REQ_PER_MIN || 90);
 
-if (!BOT_TOKEN || !BOT_WEBHOOK_SECRET) {
-  throw new Error('Missing BOT_TOKEN/TELEGRAM_BOT_TOKEN or BOT_WEBHOOK_SECRET/WEBHOOK_SECRET_TOKEN');
-}
+const missingBase = [];
+if (!BOT_TOKEN) missingBase.push('BOT_TOKEN / TELEGRAM_BOT_TOKEN');
+if (!BOT_WEBHOOK_SECRET) missingBase.push('BOT_WEBHOOK_SECRET / WEBHOOK_SECRET_TOKEN');
+
+if (missingBase.length > 0) console.error('CRITICAL: Missing bot credentials:', missingBase.join(', '));
 
 const config = {
   botToken: BOT_TOKEN,
@@ -27,30 +29,44 @@ const config = {
   defaultTenantId: process.env.DEFAULT_TENANT_ID || '00000000-0000-0000-0000-000000000000',
 };
 
-if (!config.supabaseUrl || !config.supabaseAnonKey || !config.logReferralUrl) {
-  throw new Error('Missing SUPABASE_URL, SUPABASE_ANON_KEY, or SUPABASE_LOG_REFERRAL_URL');
+const missingSupabase = [];
+if (!config.supabaseUrl) missingSupabase.push('SUPABASE_URL');
+if (!config.supabaseAnonKey) missingSupabase.push('SUPABASE_ANON_KEY');
+if (!config.logReferralUrl) missingSupabase.push('SUPABASE_LOG_REFERRAL_URL');
+
+if (missingSupabase.length > 0) console.error('CRITICAL: Missing Supabase config:', missingSupabase.join(', '));
+
+const degraded = missingBase.length > 0 || missingSupabase.length > 0;
+
+let bot = null;
+if (!missingBase.length) {
+  bot = new Telegraf(BOT_TOKEN);
+  bot.use(async (ctx, next) => {
+    ctx.state.supabaseJwt = config.botSupabaseJwt;
+    await next();
+  });
+
+  if (!missingSupabase.length) {
+    const handlers = createHandlers(config);
+    bot.start(handlers.onStart);
+    bot.command('mylink', handlers.onMyLink);
+    bot.command('status', handlers.onStatus);
+    bot.command('help', handlers.onHelp);
+    bot.command('earnings', handlers.onEarnings);
+    bot.command('discount', handlers.onDiscount);
+    bot.command('payout', handlers.onPayout);
+    bot.command('pay', handlers.onPay);
+    bot.command('staffauth', handlers.onStaffAuth);
+    bot.command('stamps', handlers.onStamps);
+    bot.command('issuestamp', handlers.onIssueStamp);
+    bot.command('badge', handlers.onBadge);
+    bot.command('verifydonate', handlers.onVerifyDonate);
+  } else {
+    bot.on('message', async (ctx) => {
+      await ctx.reply('Bot configuration incomplete. Please contact admin.');
+    });
+  }
 }
-
-const bot = new Telegraf(BOT_TOKEN);
-bot.use(async (ctx, next) => {
-  ctx.state.supabaseJwt = config.botSupabaseJwt;
-  await next();
-});
-
-const handlers = createHandlers(config);
-bot.start(handlers.onStart);
-bot.command('mylink', handlers.onMyLink);
-bot.command('status', handlers.onStatus);
-bot.command('help', handlers.onHelp);
-bot.command('earnings', handlers.onEarnings);
-bot.command('discount', handlers.onDiscount);
-bot.command('payout', handlers.onPayout);
-bot.command('pay', handlers.onPay);
-bot.command('staffauth', handlers.onStaffAuth);
-bot.command('stamps', handlers.onStamps);
-bot.command('issuestamp', handlers.onIssueStamp);
-bot.command('badge', handlers.onBadge);
-bot.command('verifydonate', handlers.onVerifyDonate);
 
 const startedAt = Date.now();
 const rateMap = new Map();
@@ -73,7 +89,12 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && url.pathname === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', uptime: Math.floor((Date.now() - startedAt) / 1000) }));
+      res.end(JSON.stringify({
+        status: 'ok',
+        mode: degraded ? 'degraded' : 'ready',
+        uptime: Math.floor((Date.now() - startedAt) / 1000),
+        missing: degraded ? [...missingBase, ...missingSupabase] : [],
+      }));
       return;
     }
 
@@ -82,6 +103,12 @@ const server = http.createServer(async (req, res) => {
       if (checkRateLimit(ip)) {
         res.writeHead(429, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Rate limit exceeded' }));
+        return;
+      }
+
+      if (!bot) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Bot token is missing' }));
         return;
       }
 
@@ -114,5 +141,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[bot] listening on :${PORT}`);
+  console.log(`[bot] listening on :${PORT} (${degraded ? 'degraded' : 'ready'})`);
 });
