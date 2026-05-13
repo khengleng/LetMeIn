@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const ALLOWED_ORIGIN = 'https://letmein.cambodia.com';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://letmein.cambobia.com';
+const APP_ORIGIN = new URL(APP_URL).origin;
 const WINDOW_MS = 60_000;
 const MAX_API_REQ_PER_WINDOW = 120;
 const MAX_WEBHOOK_REQ_PER_WINDOW = 90;
@@ -31,15 +32,18 @@ function reject(status: number, message: string) {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const origin = req.headers.get('origin');
-  const host = req.headers.get('host') || '';
+  const host = (req.headers.get('host') || '').toLowerCase();
   const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
+  const isRailwayHost = host.endsWith('.up.railway.app');
+  const isLocalHost = host === 'localhost:3000' || host === '127.0.0.1:3000';
+  const isCustomHost = host === new URL(APP_URL).host.toLowerCase();
 
-  if (host !== 'letmein.cambodia.com' && host !== 'localhost:3000') {
+  if (!isCustomHost && !isRailwayHost && !isLocalHost) {
     return reject(403, 'Invalid host');
   }
 
   if (pathname.startsWith('/admin')) {
-    if (origin && origin !== ALLOWED_ORIGIN) {
+    if (origin && origin !== APP_ORIGIN && origin !== 'http://localhost:3000') {
       return reject(403, 'Invalid origin for admin route');
     }
     const res = NextResponse.next();
@@ -53,12 +57,12 @@ export function middleware(req: NextRequest) {
       return reject(429, 'Rate limit exceeded');
     }
 
-    if (origin && origin !== ALLOWED_ORIGIN && origin !== 'http://localhost:3000') {
+    if (origin && origin !== APP_ORIGIN && origin !== 'http://localhost:3000') {
       return reject(403, 'Invalid origin for API route');
     }
 
     const res = NextResponse.next();
-    res.headers.set('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+    res.headers.set('Access-Control-Allow-Origin', APP_ORIGIN);
     res.headers.set('Access-Control-Allow-Credentials', 'true');
     res.headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Telegram-Bot-Api-Secret-Token');
