@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   poweredByHeader: false,
   reactStrictMode: true,
   async rewrites() {
@@ -19,6 +18,19 @@ const nextConfig = {
       {
         source: '/cron/ping',
         destination: `${cronServiceUrl}/ping`,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Service-Name',
+            value: 'letmein-web',
+          },
+        ],
       },
     ];
   },

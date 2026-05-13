@@ -91,7 +91,10 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[cron] listening on :${PORT}`);
+  console.log('================================================================');
+  console.log(`[cron] SERVICE STARTING ON PORT ${PORT}`);
+  console.log(`[cron] uptime check available at GET /ping`);
+  console.log('================================================================');
   console.log(`[cron] anchor schedule: ${ANCHOR_CRON_SCHEDULE}`);
   console.log(`[cron] tenant check schedule: ${TENANT_CHECK_CRON_SCHEDULE}`);
   console.log(`[cron] badge cleanup schedule: ${BADGE_TOKEN_CLEANUP_CRON}`);

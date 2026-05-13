@@ -13,13 +13,22 @@ const required = [
   'SUPABASE_LOG_REFERRAL_URL',
 ];
 
-if (!BOT_TOKEN) throw new Error('Missing BOT_TOKEN or TELEGRAM_BOT_TOKEN');
+const missing = [];
+if (!BOT_TOKEN) missing.push('BOT_TOKEN / TELEGRAM_BOT_TOKEN');
 if (process.env.NODE_ENV === 'production' && !BOT_WEBHOOK_SECRET) {
-  throw new Error('Missing BOT_WEBHOOK_SECRET or WEBHOOK_SECRET_TOKEN');
+  missing.push('BOT_WEBHOOK_SECRET / WEBHOOK_SECRET_TOKEN');
 }
 
 for (const key of required) {
-  if (!process.env[key]) throw new Error(`Missing required env var: ${key}`);
+  if (!process.env[key]) missing.push(key);
+}
+
+if (missing.length > 0) {
+  console.error('================================================================');
+  console.error('CRITICAL: Missing environment variables for bot operation:');
+  missing.forEach(m => console.error(` - ${m}`));
+  console.error('The bot will start but most features will fail until these are set.');
+  console.error('================================================================');
 }
 
 const config = {
