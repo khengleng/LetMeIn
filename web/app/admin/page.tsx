@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { adminSupabase } from './lib/admin-supabase';
+import { getAdminSupabase } from './lib/admin-supabase';
 import { WeeklyReferralsChart } from './lib/charts';
 import { requireOperator } from './lib/auth-guard';
 
@@ -9,6 +9,7 @@ function percent(numerator: number, denominator: number) {
 }
 
 export default async function AdminDashboardPage() {
+  const adminSupabase = getAdminSupabase();
   await requireOperator();
   const now = new Date();
   const trialWindowEnd = new Date(now);

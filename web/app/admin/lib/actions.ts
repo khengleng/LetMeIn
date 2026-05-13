@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { adminSupabase } from './admin-supabase';
+import { getAdminSupabase } from './admin-supabase';
 import { requireOperator } from './auth-guard';
 
 async function insertAuditLog(params: {
@@ -11,6 +11,7 @@ async function insertAuditLog(params: {
   targetId: string | null;
   payload: Record<string, unknown>;
 }) {
+  const adminSupabase = getAdminSupabase();
   await adminSupabase.from('audit_logs').insert({
     operator_email: params.operatorEmail,
     action_type: params.actionType,
@@ -21,6 +22,7 @@ async function insertAuditLog(params: {
 }
 
 export async function updateTenantStatus(formData: FormData) {
+  const adminSupabase = getAdminSupabase();
   const { email } = await requireOperator();
   const tenantId = String(formData.get('tenant_id') || '');
   const status = String(formData.get('status') || '');
@@ -40,6 +42,7 @@ export async function updateTenantStatus(formData: FormData) {
 }
 
 export async function updateCommissionRules(formData: FormData) {
+  const adminSupabase = getAdminSupabase();
   const { email } = await requireOperator();
   const tenantId = String(formData.get('tenant_id') || '');
   const commissionType = String(formData.get('commission_type') || 'percent');
@@ -75,6 +78,7 @@ export async function updateCommissionRules(formData: FormData) {
 }
 
 export async function markCommissionPaid(formData: FormData) {
+  const adminSupabase = getAdminSupabase();
   const { email } = await requireOperator();
   const commissionId = String(formData.get('commission_id') || '');
   const khqrReference = String(formData.get('khqr_reference') || '').trim();
@@ -106,6 +110,7 @@ export async function markCommissionPaid(formData: FormData) {
 }
 
 export async function recordManualPayment(formData: FormData) {
+  const adminSupabase = getAdminSupabase();
   const { email } = await requireOperator();
   const tenantId = String(formData.get('tenant_id') || '');
   const amountUsd = Number(formData.get('amount_usd'));
@@ -151,6 +156,7 @@ export async function recordManualPayment(formData: FormData) {
 }
 
 export async function exportBillingCsv() {
+  const adminSupabase = getAdminSupabase();
   await requireOperator();
   const { data, error } = await adminSupabase
     .from('billing_payments')

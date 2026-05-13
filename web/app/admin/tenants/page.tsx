@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { adminSupabase } from '../lib/admin-supabase';
+import { getAdminSupabase } from '../lib/admin-supabase';
 import { updateTenantStatus } from '../lib/actions';
 import { requireOperator } from '../lib/auth-guard';
 
@@ -15,6 +15,7 @@ export default async function AdminTenantsPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const adminSupabase = getAdminSupabase();
   await requireOperator();
   const q = (searchParams.q || '').trim();
   const statusFilter = (searchParams.status || '').trim();

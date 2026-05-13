@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 const links = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/tenants', label: 'Tenants' },

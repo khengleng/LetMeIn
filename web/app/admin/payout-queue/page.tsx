@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { adminSupabase } from '../lib/admin-supabase';
+import { getAdminSupabase } from '../lib/admin-supabase';
 import { markCommissionPaid } from '../lib/actions';
 import { requireOperator } from '../lib/auth-guard';
 
@@ -8,6 +8,7 @@ export default async function AdminPayoutQueuePage({
 }: {
   searchParams?: { tenant_id?: string };
 }) {
+  const adminSupabase = getAdminSupabase();
   await requireOperator();
   const tenantFilter = searchParams?.tenant_id || '';
 

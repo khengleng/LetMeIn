@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { adminSupabase } from '../lib/admin-supabase';
+import { getAdminSupabase } from '../lib/admin-supabase';
 import { updateCommissionRules } from '../lib/actions';
 import { requireOperator } from '../lib/auth-guard';
 
 export default async function AdminRulesPage() {
+  const adminSupabase = getAdminSupabase();
   await requireOperator();
   const { data: tenants } = await adminSupabase
     .from('tenants')

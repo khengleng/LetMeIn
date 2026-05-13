@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { adminSupabase } from '../lib/admin-supabase';
+import { getAdminSupabase } from '../lib/admin-supabase';
 import { exportBillingCsv, recordManualPayment } from '../lib/actions';
 import { requireOperator } from '../lib/auth-guard';
 
@@ -10,6 +10,7 @@ const TIERS = [
 ];
 
 export default async function AdminBillingPage() {
+  const adminSupabase = getAdminSupabase();
   await requireOperator();
   const [tenantsRes, paymentsRes, trialTenantsRes] = await Promise.all([
     adminSupabase.from('tenants').select('id,name,status,trial_ends_at').order('name', { ascending: true }),

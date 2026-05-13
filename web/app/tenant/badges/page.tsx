@@ -2,11 +2,19 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { BadgeAchieversTable } from './components/BadgeAchieversTable';
 
-const adminDb = createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+export const dynamic = 'force-dynamic';
+
+function getAdminDb() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 async function getTenantContext() {
+  const adminDb = getAdminDb();
   const authJwt = process.env.TENANT_SERVER_AUTH_JWT || '';
   if (!authJwt) throw new Error('Missing TENANT_SERVER_AUTH_JWT');
 
@@ -29,6 +37,7 @@ export default async function TenantBadgesPage({
 }: {
   searchParams?: { q?: string };
 }) {
+  const adminDb = getAdminDb();
   const tenant = await getTenantContext();
   const q = (searchParams?.q || '').trim().toLowerCase();
 

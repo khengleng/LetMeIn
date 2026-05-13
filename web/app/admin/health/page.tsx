@@ -1,4 +1,4 @@
-import { adminSupabase } from '../lib/admin-supabase';
+import { getAdminSupabase } from '../lib/admin-supabase';
 import { requireOperator } from '../lib/auth-guard';
 
 async function checkUrl(url: string, expected = 200) {
@@ -11,6 +11,7 @@ async function checkUrl(url: string, expected = 200) {
 }
 
 export default async function AdminHealthPage() {
+  const adminSupabase = getAdminSupabase();
   await requireOperator();
 
   const botBase = process.env.BOT_PUBLIC_URL || '';

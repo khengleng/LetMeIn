@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const db = createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string, {
-  auth: { persistSession: false },
-});
+function getDb() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 export async function POST(req: NextRequest) {
+  const db = getDb();
   const apiKey = req.headers.get('x-letmein-api-key');
   if (!apiKey || apiKey !== process.env.TENANT_INTEGRATION_API_KEY) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
