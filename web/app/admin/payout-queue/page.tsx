@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { adminSupabase } from '../lib/admin-supabase';
 import { markCommissionPaid } from '../lib/actions';
+import { requireOperator } from '../lib/auth-guard';
 
 export default async function AdminPayoutQueuePage({
   searchParams,
 }: {
   searchParams?: { tenant_id?: string };
 }) {
+  await requireOperator();
   const tenantFilter = searchParams?.tenant_id || '';
 
   const { data: tenants } = await adminSupabase.from('tenants').select('id,name').order('name', { ascending: true });

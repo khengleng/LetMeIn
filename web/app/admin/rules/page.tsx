@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { adminSupabase } from '../lib/admin-supabase';
 import { updateCommissionRules } from '../lib/actions';
+import { requireOperator } from '../lib/auth-guard';
 
 export default async function AdminRulesPage() {
+  await requireOperator();
   const { data: tenants } = await adminSupabase
     .from('tenants')
     .select('id,name,commission_type,commission_value,discount_type,discount_value')

@@ -44,5 +44,4 @@ export async function overrideScheme(formData: FormData) {
   });
 
   revalidatePath('/admin/schemes');
-  return { ok: true };
 }

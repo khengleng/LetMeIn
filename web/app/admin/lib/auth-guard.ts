@@ -9,8 +9,11 @@ const anonKey = process.env.SUPABASE_ANON_KEY;
 const allowlistRaw = process.env.OPERATOR_ALLOWLIST_EMAILS || '';
 const authCookieName = process.env.SUPABASE_AUTH_COOKIE || 'sb-access-token';
 
-if (!supabaseUrl || !anonKey) {
-  throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY');
+function getAuthConfig() {
+  if (!supabaseUrl || !anonKey) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY');
+  }
+  return { supabaseUrl, anonKey };
 }
 
 const allowlist = allowlistRaw
@@ -19,13 +22,14 @@ const allowlist = allowlistRaw
   .filter(Boolean);
 
 export async function requireOperator() {
+  const cfg = getAuthConfig();
   const accessToken = cookies().get(authCookieName)?.value;
 
   if (!accessToken) {
     redirect('/admin/login');
   }
 
-  const supabase = createClient(supabaseUrl, anonKey, {
+  const supabase = createClient(cfg.supabaseUrl, cfg.anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
