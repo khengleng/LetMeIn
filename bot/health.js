@@ -9,6 +9,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
 const BOT_WEBHOOK_SECRET = process.env.BOT_WEBHOOK_SECRET || process.env.WEBHOOK_SECRET_TOKEN;
 const WEBHOOK_SECRET_PATH = process.env.WEBHOOK_SECRET_PATH || 'webhook';
 const WEBHOOK_QUERY_SECRET = process.env.BOT_WEBHOOK_QUERY_SECRET || BOT_WEBHOOK_SECRET;
+const WEBHOOK_BASE_URL = (process.env.WEBHOOK_BASE_URL || '').replace(/\/+$/, '');
 const MAX_WEBHOOK_REQ_PER_MIN = Number(process.env.MAX_WEBHOOK_REQ_PER_MIN || 90);
 
 const missingBase = [];
@@ -114,9 +115,12 @@ const server = http.createServer(async (req, res) => {
 
       const incomingHeaderSecret = req.headers['x-telegram-bot-api-secret-token'];
       if (BOT_WEBHOOK_SECRET && incomingHeaderSecret !== BOT_WEBHOOK_SECRET) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid webhook header token' }));
-        return;
+        const querySecret = url.searchParams.get('secret');
+        if (!WEBHOOK_QUERY_SECRET || querySecret !== WEBHOOK_QUERY_SECRET) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid webhook token' }));
+          return;
+        }
       }
 
       const chunks = [];
@@ -140,6 +144,26 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+async function registerWebhookIfPossible() {
+  if (!bot) return;
+  if (!WEBHOOK_BASE_URL) {
+    console.log('[bot] WEBHOOK_BASE_URL not set; skipping Telegram setWebhook');
+    return;
+  }
+  try {
+    const hookUrl = `${WEBHOOK_BASE_URL}/${WEBHOOK_SECRET_PATH}`;
+    await bot.telegram.setWebhook(hookUrl, {
+      secret_token: BOT_WEBHOOK_SECRET,
+      allowed_updates: ['message'],
+      drop_pending_updates: false,
+    });
+    console.log(`[bot] setWebhook ok: ${hookUrl}`);
+  } catch (error) {
+    console.error('[bot] setWebhook failed:', error);
+  }
+}
+
+server.listen(PORT, async () => {
   console.log(`[bot] listening on :${PORT} (${degraded ? 'degraded' : 'ready'})`);
+  await registerWebhookIfPossible();
 });
